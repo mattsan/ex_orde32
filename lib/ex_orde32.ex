@@ -29,6 +29,7 @@ defmodule ExOrde32 do
     |> Enum.uniq()
     |> Enum.filter(&Enum.count(&1) > 0)
     |> Enum.map(&calc_rect_size(result_cells, &1))
+    |> List.flatten()
     |> Enum.filter(&(&1 > 0))
     |> Enum.sort()
     |> Enum.join(",")
@@ -46,15 +47,47 @@ defmodule ExOrde32 do
   defp calc_rect_size(cells, value) do
     target_cells = for x <- (0..35), y <- (0..35), Map.get(cells, {x, y}) == value, do: {x, y}
 
-    target_cell_count = Enum.count(target_cells)
+    chunk_connected(target_cells)
+    |> Enum.map(fn chunk ->
+      chunk_count = Enum.count(chunk)
 
-    {left, right} = target_cells |> Enum.map(&elem(&1, 0)) |> Enum.min_max()
-    {top, bottom} = target_cells |> Enum.map(&elem(&1, 1)) |> Enum.min_max()
+      {left, right} = chunk |> Enum.map(&elem(&1, 0)) |> Enum.min_max()
+      {top, bottom} = chunk |> Enum.map(&elem(&1, 1)) |> Enum.min_max()
 
-    if (right - left + 1) * (bottom - top + 1) == target_cell_count do
-      target_cell_count
+      if (right - left + 1) * (bottom - top + 1) == chunk_count do
+        chunk_count
+      else
+        0
+      end
+    end)
+  end
+
+  def chunk_connected(cells) do
+    chunk_connected(cells, [])
+
+    # 実装中
+    [cells]
+  end
+
+  def chunk_connected([], chunks) do
+    chunks
+  end
+
+  def chunk_connected([{x, y} | cells], chunks) do
+    next_chunks =
+      chunks
+      |> Enum.map(fn chunk ->
+        if Enum.count(for dx <- x-1..x+1, dy <- y-1..y+1, Enum.find(chunk, fn {cx, cy} -> cx == dx && cy == dy end), do: 1) > 0 do
+          chunk
+        else
+          [{x, y} | chunk]
+        end
+      end)
+
+    if next_chunks == chunks do
+      chunk_connected(cells, [[{x, y}] | chunks])
     else
-      0
+      chunk_connected(cells, next_chunks)
     end
   end
 end
