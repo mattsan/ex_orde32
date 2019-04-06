@@ -2,7 +2,8 @@ defmodule ExOrde32Test do
   use ExUnit.Case
   doctest ExOrde32
 
-  test "greets the world" do
-    assert ExOrde32.hello() == :world
-  end
+  import ExOrde32
+
+  test "T", do: assert solve("abc") == "abc"
+  test "F", do: assert solve("abc") == "ABC"
 end
